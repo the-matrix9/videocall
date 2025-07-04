@@ -1,51 +1,185 @@
 <!DOCTYPE html>
-<html>
-<head><title>Call {{ target.username }}</title></head>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ title or 'Video Chat' }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      background-color: #f0f2f5;
+      color: #333;
+    }
+    .container {
+      max-width: 400px;
+      margin: 50px auto;
+      padding: 2rem;
+      background: #fff;
+      border-radius: 1rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    input[type="text"], input[type="password"], input[type="file"] {
+      padding: 0.8rem;
+      border: 1px solid #ccc;
+      border-radius: 0.5rem;
+    }
+    button {
+      padding: 0.8rem;
+      background-color: #4f46e5;
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button:hover {
+      background-color: #3730a3;
+    }
+    .link {
+      text-align: center;
+      margin-top: 1rem;
+    }
+    .link a {
+      color: #4f46e5;
+      text-decoration: none;
+    }
+    .video-container {
+      display: flex;
+      justify-content: center;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    video {
+      border-radius: 1rem;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    img.dp {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #4f46e5;
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
 <body>
-<h2>Calling {{ target.username }}</h2>
-<img src="{{ target.dp }}" width="100">
-<video id="localVideo" autoplay muted></video>
-<video id="remoteVideo" autoplay></video>
-<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-<script>
-const socket = io();
-let pc = new RTCPeerConnection();
-let localVideo = document.getElementById("localVideo");
-let remoteVideo = document.getElementById("remoteVideo");
-
-navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
-    localVideo.srcObject = stream;
-    stream.getTracks().forEach(track => pc.addTrack(track, stream));
-});
-
-pc.ontrack = event => {
-    remoteVideo.srcObject = event.streams[0];
-};
-
-pc.onicecandidate = event => {
-    if (event.candidate) {
-        socket.emit('signal', { type: 'candidate', candidate: event.candidate });
+  {% if page == 'register' %}
+  <div class="container">
+    <h2>Register</h2>
+    <form method="POST" enctype="multipart/form-data">
+      <input name="username" placeholder="Username" required />
+      <input name="password" type="password" placeholder="Password" required />
+      <input type="file" name="dp" accept="image/*" required />
+      <button type="submit">Register</button>
+    </form>
+    <div class="link">
+      Already registered? <a href="/login">Login here</a>
+    </div>
+  </div>
+  {% elif page == 'login' %}
+  <div class="container">
+    <h2>Login</h2>
+    <form method="POST">
+      <input name="username" placeholder="Username" required />
+      <input name="password" type="password" placeholder="Password" required />
+      <button type="submit">Login</button>
+    </form>
+    <div class="link">
+      New user? <a href="/register">Register here</a>
+    </div>
+  </div>
+  {% elif page == 'dashboard' %}
+  <div class="container">
+    <div class="user-info">
+      <img src="{{ user.dp }}" class="dp">
+      <strong>{{ user.username }}</strong>
+    </div>
+    <form action="" onsubmit="event.preventDefault(); goToCall()">
+      <input id="targetUser" placeholder="Search username to call...">
+      <button type="submit">Call</button>
+    </form>
+  </div>
+  <script>
+    function goToCall() {
+      const username = document.getElementById('targetUser').value.trim();
+      if (username) window.location.href = '/call/' + username;
     }
-};
+  </script>
+  {% elif page == 'call' %}
+  <div class="container">
+    <div class="user-info">
+      <img src="{{ target.dp }}" class="dp">
+      <strong>Calling {{ target.username }}</strong>
+    </div>
+    <div class="video-container">
+      <video id="localVideo" autoplay muted></video>
+      <video id="remoteVideo" autoplay></video>
+    </div>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+      const socket = io();
+      let pc = new RTCPeerConnection();
+      let localVideo = document.getElementById("localVideo");
+      let remoteVideo = document.getElementById("remoteVideo");
 
-socket.on('signal', async (msg) => {
-    if (msg.type === 'offer') {
-        await pc.setRemoteDescription(new RTCSessionDescription(msg));
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        socket.emit('signal', answer);
-    } else if (msg.type === 'answer') {
-        await pc.setRemoteDescription(new RTCSessionDescription(msg));
-    } else if (msg.type === 'candidate') {
-        await pc.addIceCandidate(new RTCIceCandidate(msg.candidate));
-    }
-});
+      navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
+          localVideo.srcObject = stream;
+          stream.getTracks().forEach(track => pc.addTrack(track, stream));
+      });
 
-socket.on('connect', async () => {
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    socket.emit('signal', offer);
-});
-</script>
+      pc.ontrack = event => {
+          remoteVideo.srcObject = event.streams[0];
+      };
+
+      pc.onicecandidate = event => {
+          if (event.candidate) {
+              socket.emit('signal', { type: 'candidate', candidate: event.candidate });
+          }
+      };
+
+      socket.on('signal', async (msg) => {
+          if (msg.type === 'offer') {
+              await pc.setRemoteDescription(new RTCSessionDescription(msg));
+              const answer = await pc.createAnswer();
+              await pc.setLocalDescription(answer);
+              socket.emit('signal', answer);
+          } else if (msg.type === 'answer') {
+              await pc.setRemoteDescription(new RTCSessionDescription(msg));
+          } else if (msg.type === 'candidate') {
+              await pc.addIceCandidate(new RTCIceCandidate(msg.candidate));
+          }
+      });
+
+      socket.on('connect', async () => {
+          const offer = await pc.createOffer();
+          await pc.setLocalDescription(offer);
+          socket.emit('signal', offer);
+      });
+    </script>
+  </div>
+  {% endif %}
 </body>
 </html>
