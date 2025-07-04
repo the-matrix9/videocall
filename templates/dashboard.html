@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<head><title>Dashboard</title></head>
+<body>
+<h2>Welcome, {{ user.username }}</h2>
+<img src="{{ user.dp }}" width="100"><br>
+<form method="GET" action="/call/">
+  <input name="username" placeholder="Search user...">
+  <button type="submit" formaction="#" onclick="window.location.href='/call/'+this.form.username.value">Call</button>
+</form>
+</body>
+</html>

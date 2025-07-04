@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head><title>Call {{ target.username }}</title></head>
+<body>
+<h2>Calling {{ target.username }}</h2>
+<img src="{{ target.dp }}" width="100">
+<video id="localVideo" autoplay muted></video>
+<video id="remoteVideo" autoplay></video>
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+<script>
+const socket = io();
+let pc = new RTCPeerConnection();
+let localVideo = document.getElementById("localVideo");
+let remoteVideo = document.getElementById("remoteVideo");
+
+navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
+    localVideo.srcObject = stream;
+    stream.getTracks().forEach(track => pc.addTrack(track, stream));
+});
+
+pc.ontrack = event => {
+    remoteVideo.srcObject = event.streams[0];
+};
+
+pc.onicecandidate = event => {
+    if (event.candidate) {
+        socket.emit('signal', { type: 'candidate', candidate: event.candidate });
+    }
+};
+
+socket.on('signal', async (msg) => {
+    if (msg.type === 'offer') {
+        await pc.setRemoteDescription(new RTCSessionDescription(msg));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        socket.emit('signal', answer);
+    } else if (msg.type === 'answer') {
+        await pc.setRemoteDescription(new RTCSessionDescription(msg));
+    } else if (msg.type === 'candidate') {
+        await pc.addIceCandidate(new RTCIceCandidate(msg.candidate));
+    }
+});
+
+socket.on('connect', async () => {
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    socket.emit('signal', offer);
+});
+</script>
+</body>
+</html>
