@@ -77,9 +77,29 @@ def call_user(username):
             return render_template('call.html', target=u, user=session['user'])
     return "User not found"
 
+@socketio.on('connect')
+def on_connect():
+    sid = request.sid
+    print(f"{sid} connected")
+
+
 @socketio.on('signal')
-def handle_signal(data):
-    emit('signal', data, broadcast=True, include_self=False)
+def on_signal(data):
+    sid = request.sid
+    room = rooms.get(sid)
+    print(f"Signal from {sid}: {data}")
+    # broadcast to others in the room
+    for client_id, r in rooms.items():
+        if r == room and client_id != sid:
+            socketio.emit('signal', data, to=client_id)
+
+@socketio.on('join-room')
+def on_join(data):
+    sid = request.sid
+    room_id = data.get('room')
+    rooms[sid] = room_id
+    join_room(room_id)
+    print(f"{sid} joined room {room_id}")
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=5000)
