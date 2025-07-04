@@ -1,14 +1,102 @@
 <!DOCTYPE html>
-<html>
-<head><title>Register</title></head>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Video Call App</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      background-color: #f0f2f5;
+      color: #333;
+    }
+    .container {
+      max-width: 400px;
+      margin: 50px auto;
+      padding: 2rem;
+      background: #fff;
+      border-radius: 1rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    input[type="text"], input[type="password"], input[type="file"] {
+      padding: 0.8rem;
+      border: 1px solid #ccc;
+      border-radius: 0.5rem;
+    }
+    button {
+      padding: 0.8rem;
+      background-color: #4f46e5;
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button:hover {
+      background-color: #3730a3;
+    }
+    .link {
+      text-align: center;
+      margin-top: 1rem;
+    }
+    .link a {
+      color: #4f46e5;
+      text-decoration: none;
+    }
+    .video-container {
+      display: flex;
+      justify-content: center;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    video {
+      border-radius: 1rem;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    img.dp {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #4f46e5;
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
 <body>
-<h2>Register</h2>
-<form method="POST" enctype="multipart/form-data">
-  Username: <input name="username"><br>
-  Password: <input name="password" type="password"><br>
-  Profile Picture: <input type="file" name="dp"><br>
-  <button type="submit">Register</button>
-</form>
-<a href="/login">Login</a>
+  <div class="container">
+    <h2>Register</h2>
+    <form method="POST" enctype="multipart/form-data">
+      <input name="username" placeholder="Username" required />
+      <input name="password" type="password" placeholder="Password" required />
+      <input type="file" name="dp" accept="image/*" required />
+      <button type="submit">Register</button>
+    </form>
+    <div class="link">
+      Already registered? <a href="/login">Login here</a>
+    </div>
+  </div>
 </body>
 </html>
