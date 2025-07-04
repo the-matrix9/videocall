@@ -174,10 +174,13 @@
       });
 
       socket.on('connect', async () => {
-          const offer = await pc.createOffer();
-          await pc.setLocalDescription(offer);
-          socket.emit('signal', offer);
-      });
+    const room = "{{ target.username }}";
+    socket.emit("join-room", { room });
+
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    socket.emit("signal", offer);
+});
     </script>
   </div>
   {% endif %}
